@@ -1,58 +1,141 @@
 # DAX Measures — Healthcare Denial Management Dashboard
 
 All 41 measures live in a single hidden **`DAX Table`** in the data model, organized into four display folders: `_Total_Measures`, `_Previous_Year`, `_Comparisons`, and `_CF_Measures` (conditional formatting). This file lists every measure exactly as extracted from the `.pbix` file, with its DAX expression and a one-line purpose.
-
 ---
 
 ## _Total_Measures — Core KPI Calculations
 
-| Measure | DAX Expression | Purpose |
-|---|---|---|
-| **Total Billed Revenue ($)** | `SUM(Claims[claim_amount_usd])` | Sums the total dollar amount billed across all claims in the current filter context. |
-| **Money At Risk** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied")` | Sums the dollar value of all claims currently in a denied status. |
-| **Denial Rate %** | `DIVIDE(CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied"), COUNTROWS(Claims), 0)` | Calculates the percentage of all claims that were denied. |
-| **Net Recovery ($)** | `SUM(Denial[estimated_recovery_usd])` | Sums the estimated dollar amount expected to be recovered from denied claims. |
-| **Total Paid Revenue ($)** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "paid")` | Sums the dollar amount of claims that have been paid. |
-| **Total Pending Revenue ($)** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "pending")` | Sums the dollar amount of claims still awaiting adjudication. |
-| **Denied Claims Count** | `CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied")` | Counts the number of claims with a denied outcome. |
-| **Controllable Denied Revenue ($)** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Claims[denial_category] IN {"coding_error","auth_missing","duplicate","timely_filing","bundling"})` | Sums denied dollars that fall into preventable/internally-controllable denial categories (coding errors, missing auth, duplicates, timely filing, bundling). |
-| **Avoidable Denial %** | `DIVIDE([Controllable Denied Revenue ($)], [Money At Risk], 0)` | Shows what share of total denied revenue was theoretically avoidable/preventable. |
-| **Avg Days to Pay** | `AVERAGE(Payers[avg_payment_turnaround_days])` | Averages each payer's typical payment turnaround time, in days. |
-| **Appeal Overturn Rate %** | `CALCULATE(AVERAGE(Denial[appeal_success_probability]), Denial[appealable] = TRUE())` | Averages the modeled success probability of appeals across all appealable denied claims. |
-| **Net Collection Rate %** | `DIVIDE([Total Paid Revenue ($)], [Total Billed Revenue ($)], 0)` | Shows what percentage of total billed revenue has actually been collected/paid. |
-| **$ Closing in <7 Days** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Claims[Days Until Appeal Deadline] >= 0, Claims[Days Until Appeal Deadline] <= 7)` | Sums denied claim dollars whose appeal deadline expires within the next 7 days, flagging urgent action items. |
-| **Avg Days Since Denial** | `CALCULATE(AVERAGE(Claims[Days Since Denial]), Claims[outcome] = "denied")` | Averages how long denied claims have sat unresolved since their denial date. |
-| **Total Claims Unworked** | `CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied", Denial[recovery_action] <> "writeoff")` | Counts denied claims that have not yet been written off and still need staff action. |
-| **Actionable Unworked Revenue** | `CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Denial[recovery_action] <> "writeoff")` | Sums the dollar value of denied, non-written-off claims that are still recoverable and need work. |
-| **Appeal Rate %** | `VAR totalappeal = CALCULATE(COUNTROWS(Claims), Claims[outcome] = "Denied", Denial[appealable] = TRUE()) VAR totaldenials = [Denied Claims Count] RETURN DIVIDE(totalappeal, totaldenials, 0)` | Calculates what percentage of denied claims are eligible/flagged for appeal. |
-| **Overturned Claims Count** | `SUM(Denial[appeal_success_probability])` | Sums the appeal success probability field as a proxy count of claims expected to be overturned on appeal. |
-| **Weighted Realized Recovery ($)** | `SUMX(Denial, Denial[estimated_recovery_usd] * Denial[appeal_success_probability])` | Calculates a probability-weighted estimate of actual dollars likely to be recovered, by multiplying each claim's estimated recovery by its appeal success probability. |
+**Total Billed Revenue ($)** 
+`SUM(Claims[claim_amount_usd])` 
+Sums the total dollar amount billed across all claims in the current filter context. 
+
+**Money At Risk** 
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied")` 
+Sums the dollar value of all claims currently in a denied status.
+
+**Denial Rate %** 
+`DIVIDE(CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied"), COUNTROWS(Claims), 0)` 
+Calculates the percentage of all claims that were denied.
+
+**Net Recovery ($)**
+`SUM(Denial[estimated_recovery_usd])`
+Sums the estimated dollar amount expected to be recovered from denied claims.
+
+**Total Paid Revenue ($)**
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "paid")` 
+Sums the dollar amount of claims that have been paid.
+
+Total Pending Revenue ($)**
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "pending")`
+Sums the dollar amount of claims still awaiting adjudication.
+
+**Denied Claims Count**
+`CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied")`
+Counts the number of claims with a denied outcome.
+
+**Controllable Denied Revenue ($)**
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Claims[denial_category] IN {"coding_error","auth_missing","duplicate","timely_filing","bundling"})`
+Sums denied dollars that fall into preventable/internally-controllable denial categories (coding errors, missing auth, duplicates, timely filing, bundling).
+
+**Avoidable Denial %**
+`DIVIDE([Controllable Denied Revenue ($)], [Money At Risk], 0)`
+Shows what share of total denied revenue was theoretically avoidable/preventable.
+
+Avg Days to Pay**
+`AVERAGE(Payers[avg_payment_turnaround_days])`
+Averages each payer's typical payment turnaround time, in days.
+
+**Appeal Overturn Rate %**
+`CALCULATE(AVERAGE(Denial[appeal_success_probability]), Denial[appealable] = TRUE())`
+Averages the modeled success probability of appeals across all appealable denied claims.
+
+Net Collection Rate %**
+`DIVIDE([Total Paid Revenue ($)], [Total Billed Revenue ($)], 0)`
+Shows what percentage of total billed revenue has actually been collected/paid.
+
+**$ Closing in <7 Days**
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Claims[Days Until Appeal Deadline] >= 0, Claims[Days Until Appeal Deadline] <= 7)`
+Sums denied claim dollars whose appeal deadline expires within the next 7 days, flagging urgent action items.
+
+**Avg Days Since Denial**
+`CALCULATE(AVERAGE(Claims[Days Since Denial]), Claims[outcome] = "denied")`
+Averages how long denied claims have sat unresolved since their denial date.
+
+**Total Claims Unworked**
+`CALCULATE(COUNTROWS(Claims), Claims[outcome] = "denied", Denial[recovery_action] <> "writeoff")`
+Counts denied claims that have not yet been written off and still need staff action.
+
+**Actionable Unworked Revenue**
+`CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome] = "denied", Denial[recovery_action] <> "writeoff")`
+Sums the dollar value of denied, non-written-off claims that are still recoverable and need work.
+
+**Appeal Rate %**
+`VAR totalappeal = CALCULATE(COUNTROWS(Claims), Claims[outcome] = "Denied", Denial[appealable] = TRUE()) VAR totaldenials = [Denied Claims Count] RETURN DIVIDE(totalappeal, totaldenials, 0)`
+Calculates what percentage of denied claims are eligible/flagged for appeal.
+
+**Overturned Claims Count**
+`SUM(Denial[appeal_success_probability])`
+Sums the appeal success probability field as a proxy count of claims expected to be overturned on appeal.
+
+**Weighted Realized Recovery ($)**
+`SUMX(Denial, Denial[estimated_recovery_usd] * Denial[appeal_success_probability])`
+Calculates a probability-weighted estimate of actual dollars likely to be recovered, by multiplying each claim's estimated recovery by its appeal success probability.
 
 ---
 
 ## _Previous_Year — Prior-Year Comparison Bases
 
-| Measure | DAX Expression | Purpose |
-|---|---|---|
-| **Billed Revenue PY ($)** | `CALCULATE([Total Billed Revenue ($)], DATEADD('Date'[Date], -1, YEAR))` | Shifts Total Billed Revenue back one year to establish a prior-year comparison baseline. |
-| **Denied Revenue PY ($)** | `CALCULATE([Money At Risk], DATEADD('Date'[Date], -1, YEAR))` | Shifts Money At Risk back one year to establish a prior-year comparison baseline. |
-| **Net Recovery PY ($)** | `CALCULATE([Net Recovery ($)], DATEADD('Date'[Date], -1, YEAR))` | Shifts Net Recovery back one year to establish a prior-year comparison baseline. |
-| **Denial Rate PY** | `CALCULATE([Denial Rate %], DATEADD('Date'[Date], -1, YEAR))` | Shifts Denial Rate % back one year to establish a prior-year comparison baseline. |
-| **Paid Revenue PY ($)** | `CALCULATE([Total Paid Revenue ($)], DATEADD('Date'[Date], -1, YEAR))` | Shifts Total Paid Revenue back one year to establish a prior-year comparison baseline. |
-| **Pending Revenue PY ($)** | `CALCULATE([Total Pending Revenue ($)], DATEADD('Date'[Date], -1, YEAR))` | Shifts Total Pending Revenue back one year to establish a prior-year comparison baseline. |
+**Billed Revenue PY ($)**
+`CALCULATE([Total Billed Revenue ($)], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Total Billed Revenue back one year to establish a prior-year comparison baseline.
+
+**Denied Revenue PY ($)**
+`CALCULATE([Money At Risk], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Money At Risk back one year to establish a prior-year comparison baseline.
+
+**Net Recovery PY ($)**
+`CALCULATE([Net Recovery ($)], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Net Recovery back one year to establish a prior-year comparison baseline.
+
+**Denial Rate PY**
+`CALCULATE([Denial Rate %], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Denial Rate % back one year to establish a prior-year comparison baseline.
+
+**Paid Revenue PY ($)**
+`CALCULATE([Total Paid Revenue ($)], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Total Paid Revenue back one year to establish a prior-year comparison baseline.
+
+**Pending Revenue PY ($)**
+`CALCULATE([Total Pending Revenue ($)], DATEADD('Date'[Date], -1, YEAR))`
+Shifts Total Pending Revenue back one year to establish a prior-year comparison baseline.
 
 ---
 
 ## _Comparisons — Formatted YoY % Change Labels
 
-| Measure | DAX Expression | Purpose |
-|---|---|---|
-| **Billed Amount vs PY** | `VAR billedamount = DIVIDE([Total Billed Revenue ($)] - [Billed Revenue PY ($)], [Billed Revenue PY ($)], 0) RETURN IF(billedamount > 0, "▲ " & FORMAT(...) & " vs PY", "▼ " & FORMAT(...) & " vs PY")` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in billed revenue. |
-| **Denied Amount vs PY** | `VAR deniedamount = DIVIDE([Money At Risk] - [Denied Revenue PY ($)], [Denied Revenue PY ($)], 0) RETURN IF(...)` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in denied (at-risk) revenue. |
-| **Denied Rate vs PY** | `VAR deniedrate = DIVIDE([Denial Rate %] - [Denial Rate PY], [Denial Rate PY], 0) RETURN IF(...)` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in the denial rate. |
-| **Net Recovery vs PY** | `VAR netrecovery = DIVIDE([Net Recovery ($)] - [Net Recovery PY ($)], [Net Recovery PY ($)], 0) RETURN IF(...)` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in net recovery. |
-| **Paid Amount vs PY** | `VAR paidamount = DIVIDE([Total Paid Revenue ($)] - [Paid Revenue PY ($)], [Paid Revenue PY ($)], 0) RETURN IF(...)` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in paid revenue. |
-| **Pending Amount vs PY** | `VAR pendingamount = DIVIDE([Total Pending Revenue ($)] - [Pending Revenue PY ($)], [Pending Revenue PY ($)], 0) RETURN IF(...)` | Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in pending revenue. |
+**Billed Amount vs PY**
+`VAR billedamount = DIVIDE([Total Billed Revenue ($)] - [Billed Revenue PY ($)], [Billed Revenue PY ($)], 0) RETURN IF(billedamount > 0, "▲ " & FORMAT(...) & " vs PY", "▼ " & FORMAT(...) & " vs PY")`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in billed revenue.
+
+Denied Amount vs PY**
+`VAR deniedamount = DIVIDE([Money At Risk] - [Denied Revenue PY ($)], [Denied Revenue PY ($)], 0) RETURN IF(...)`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in denied (at-risk) revenue.
+
+**Denied Rate vs PY**
+`VAR deniedrate = DIVIDE([Denial Rate %] - [Denial Rate PY], [Denial Rate PY], 0) RETURN IF(...)`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in the denial rate.
+
+**Net Recovery vs PY**
+`VAR netrecovery = DIVIDE([Net Recovery ($)] - [Net Recovery PY ($)], [Net Recovery PY ($)], 0) RETURN IF(...)`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in net recovery.
+
+**Paid Amount vs PY**
+`VAR paidamount = DIVIDE([Total Paid Revenue ($)] - [Paid Revenue PY ($)], [Paid Revenue PY ($)], 0) RETURN IF(...)`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in paid revenue.
+
+**Pending Amount vs PY**
+`VAR pendingamount = DIVIDE([Total Pending Revenue ($)] - [Pending Revenue PY ($)], [Pending Revenue PY ($)], 0) RETURN IF(...)`
+Builds a formatted "▲/▼ X% vs PY" text label showing year-over-year change in pending revenue.
 
 ---
 
@@ -60,18 +143,45 @@ All 41 measures live in a single hidden **`DAX Table`** in the data model, organ
 
 These return the text "Green" or "Red" and are bound to visuals' font/background color properties to drive traffic-light styling.
 
-| Measure | DAX Expression | Purpose |
-|---|---|---|
-| **Billed Amount CF** | `VAR billedamount = DIVIDE([Total Billed Revenue ($)] - [Billed Revenue PY ($)], [Billed Revenue PY ($)], 0) RETURN IF(billedamount > 0, "Green", "Red")` | Returns a Green/Red color flag — Green when billed revenue is up year-over-year. |
-| **Denial Rate CF** | `VAR _rate = DIVIDE(CALCULATE(COUNTROWS(Claims), Claims[outcome]="denied"), COUNTROWS(Claims), 0) VAR _target = 0.10 RETURN IF(_rate > _target, "Red", "Green")` | Returns a Green/Red color flag — Red when the current denial rate exceeds the 10% target. |
-| **Denied Amount CF** | `VAR deniedamount = DIVIDE([Money At Risk] - [Denied Revenue PY ($)], [Denied Revenue PY ($)], 0) RETURN IF(deniedamount > 0, "Red", "Green")` | Returns a Green/Red color flag — Red when denied (at-risk) revenue is up year-over-year (a bad trend). |
-| **Net Recovery CF** | `VAR netrecovery = DIVIDE([Net Recovery ($)] - [Net Recovery PY ($)], [Net Recovery PY ($)], 0) RETURN IF(netrecovery > 0, "Green", "Red")` | Returns a Green/Red color flag — Green when net recovery is up year-over-year. |
-| **Denied Rate PY CF** | `var deniedrate = DIVIDE([Denial Rate %] - [Denial Rate PY], [Denial Rate PY], 0) RETURN IF(deniedrate > 0, "Green", "Red")` | Returns a Green/Red color flag based on whether the denial rate improved or worsened versus last year. |
-| **Denial Rate Target** | `0.10` | Hardcoded constant (10%) used as the benchmark target for denial-rate conditional formatting and target-line visuals. |
-| **Paid Amount CF** | `VAR paidamount = DIVIDE([Total Paid Revenue ($)] - [Paid Revenue PY ($)], [Paid Revenue PY ($)], 0) RETURN IF(paidamount > 0, "Green", "Red")` | Returns a Green/Red color flag — Green when paid revenue is up year-over-year. |
-| **Pending Amount CF** | `VAR pendingamount = DIVIDE([Total Pending Revenue ($)] - [Pending Revenue PY ($)], [Pending Revenue PY ($)], 0) RETURN IF(pendingamount > 0, "Red", "Green")` | Returns a Green/Red color flag — Red when pending (uncollected) revenue is growing year-over-year. |
-| **Money At Risk CF** | `VAR cf = CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome]="denied") RETURN IF(cf > 0, "Red", "Green")` | Returns a Green/Red color flag — Red whenever there is any dollar amount of denied claims at risk. |
-| **Total Pending Revenue CF** | `VAR cf = CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome]="pending") RETURN IF(cf > 0, "Red", "Green")` | Returns a Green/Red color flag — Red whenever there is any dollar amount of pending revenue outstanding. |
+**Billed Amount CF**
+`VAR billedamount = DIVIDE([Total Billed Revenue ($)] - [Billed Revenue PY ($)], [Billed Revenue PY ($)], 0) RETURN IF(billedamount > 0, "Green", "Red")`
+Returns a Green/Red color flag — Green when billed revenue is up year-over-year.
+
+**Denial Rate CF**
+`VAR _rate = DIVIDE(CALCULATE(COUNTROWS(Claims), Claims[outcome]="denied"), COUNTROWS(Claims), 0) VAR _target = 0.10 RETURN IF(_rate > _target, "Red", "Green")`
+Returns a Green/Red color flag — Red when the current denial rate exceeds the 10% target.
+
+**Denied Amount CF**
+`VAR deniedamount = DIVIDE([Money At Risk] - [Denied Revenue PY ($)], [Denied Revenue PY ($)], 0) RETURN IF(deniedamount > 0, "Red", "Green")`
+Returns a Green/Red color flag — Red when denied (at-risk) revenue is up year-over-year (a bad trend).
+
+**Net Recovery CF**
+`VAR netrecovery = DIVIDE([Net Recovery ($)] - [Net Recovery PY ($)], [Net Recovery PY ($)], 0) RETURN IF(netrecovery > 0, "Green", "Red")`
+Returns a Green/Red color flag — Green when net recovery is up year-over-year.
+
+**Denied Rate PY CF**
+`var deniedrate = DIVIDE([Denial Rate %] - [Denial Rate PY], [Denial Rate PY], 0) RETURN IF(deniedrate > 0, "Green", "Red")`
+Returns a Green/Red color flag based on whether the denial rate improved or worsened versus last year.
+
+**Denial Rate Target**
+`0.10`
+Hardcoded constant (10%) used as the benchmark target for denial-rate conditional formatting and target-line visuals.
+
+**Paid Amount CF**
+`VAR paidamount = DIVIDE([Total Paid Revenue ($)] - [Paid Revenue PY ($)], [Paid Revenue PY ($)], 0) RETURN IF(paidamount > 0, "Green", "Red")`
+Returns a Green/Red color flag — Green when paid revenue is up year-over-year.
+
+**Pending Amount CF**
+`VAR pendingamount = DIVIDE([Total Pending Revenue ($)] - [Pending Revenue PY ($)], [Pending Revenue PY ($)], 0) RETURN IF(pendingamount > 0, "Red", "Green")`
+Returns a Green/Red color flag — Red when pending (uncollected) revenue is growing year-over-year.
+
+**Money At Risk CF**
+`VAR cf = CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome]="denied") RETURN IF(cf > 0, "Red", "Green")`
+Returns a Green/Red color flag — Red whenever there is any dollar amount of denied claims at risk.
+
+**Total Pending Revenue CF**
+`VAR cf = CALCULATE(SUM(Claims[claim_amount_usd]), Claims[outcome]="pending") RETURN IF(cf > 0, "Red", "Green")`
+Returns a Green/Red color flag — Red whenever there is any dollar amount of pending revenue outstanding.
 
 ---
 
