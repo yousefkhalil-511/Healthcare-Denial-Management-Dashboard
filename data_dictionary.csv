@@ -1,0 +1,38 @@
+file,column,dtype,description
+claims_main.csv,claim_id,string,Unique UUID for each claim
+claims_main.csv,claim_submission_date,date,Date claim was submitted (YYYY-MM-DD)
+claims_main.csv,claim_year,int,Year of claim submission
+claims_main.csv,claim_quarter,string,Quarter of claim submission (Q1-Q4)
+claims_main.csv,payer_type,string,Insurance payer type (6 categories)
+claims_main.csv,provider_specialty,string,Clinical specialty of billing provider
+claims_main.csv,place_of_service_code,string,"CMS POS code (e.g. 11=Office, 23=ER)"
+claims_main.csv,place_of_service_desc,string,Human-readable POS description
+claims_main.csv,cpt_code,string,CPT procedure code (AMA standard)
+claims_main.csv,modifier,string,"CPT modifier (25, 59, GT, etc.) or null"
+claims_main.csv,primary_icd10_dx,string,Primary ICD-10 diagnosis code
+claims_main.csv,primary_icd10_desc,string,Plain-English description of primary dx
+claims_main.csv,secondary_icd10_dx,string,Pipe-delimited secondary ICD-10 codes or null
+claims_main.csv,secondary_dx_count,int,Number of secondary diagnoses (0-4)
+claims_main.csv,prior_auth_required,bool,Whether payer requires prior auth for this CPT
+claims_main.csv,prior_auth_obtained,bool,Whether prior auth was obtained before service
+claims_main.csv,prior_auth_number,string,Prior auth reference number or null
+claims_main.csv,documentation_completeness,float,Score 0-1: completeness of supporting docs
+claims_main.csv,claim_amount_usd,float,Billed charge amount in USD
+claims_main.csv,outcome,string,Claim outcome: paid/denied/partial_pay/pending
+claims_main.csv,denial_reason_code,string,"X12 835 denial reason code (CO-*, PR-*, OA-*, N-*)"
+claims_main.csv,denial_category,string,Denial category label (7 classes) or null
+denial_labels.csv,claim_id,string,FK → claims_main.claim_id
+denial_labels.csv,denial_category,string,Category of denial (7 classes)
+denial_labels.csv,denial_reason_code,string,X12 835 reason code
+denial_labels.csv,denial_code_description,string,Human-readable denial reason
+denial_labels.csv,appealable,bool,Whether denial is eligible for appeal
+denial_labels.csv,appeal_success_probability,float,Modeled probability of successful appeal (0-1)
+denial_labels.csv,recovery_action,string,Recommended recovery action
+denial_labels.csv,estimated_recovery_usd,float,Expected $ recovery if appeal filed
+payer_rules.csv,payer_type,string,Payer type
+payer_rules.csv,cpt_code,string,CPT code
+payer_rules.csv,requires_prior_auth,bool,Whether this payer requires PA for this CPT
+payer_rules.csv,auth_lead_time_days,int,Typical days needed to obtain PA
+payer_rules.csv,historical_denial_rate,float,Historical denial rate for payer×CPT combo
+payer_rules.csv,avg_payment_turnaround_days,int,Average days from submission to payment
+payer_rules.csv,timely_filing_limit_days,int,Payer timely filing deadline in days
